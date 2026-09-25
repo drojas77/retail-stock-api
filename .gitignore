@@ -1,0 +1,44 @@
+# === SECRET ===
+.env
+src/main/resources/application-dev.properties
+src/main/resources/application-prod.properties
+
+# === JAVA / MAVEN ===
+target/
+*.class
+*.log
+*.jar
+!mvnw
+!mvnw.cmd
+.mvn/wrapper/maven-wrapper.jar
+
+# === IDEs ===
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
+
+# === OTROS ===
+*.dump
+*.pdf

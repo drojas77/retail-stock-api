@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Alta de Producto - Zapatería</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+        .form-container { max-width: 500px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin: 0 auto; }
+        h2 { color: #333; margin-top: 0; border-bottom: 2px solid #28a745; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; }
+        .btn:hover { background-color: #218838; }
+        .help-text { font-size: 13px; color: #6c757d; margin-top: 5px; }
+        .alert-error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>👟 Registrar Modelo / Producto General</h2>
+    <div class="alert-error" th:if="${error}" th:text="${error}"></div>
+
+    <a th:href="@{/index}" style="display: inline-block; background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-bottom: 10px;">
+        Volver a Principal
+    </a>
+
+    <form th:action="@{/productos/guardar-producto}" th:object="${productoRequest}" method="POST">
+        <div class="form-group">
+            <label>Temporada:</label>
+            <input type="text" th:field="*{temporada}" placeholder="Ej: PV-2026, OI-2026" required />
+        </div>
+
+        <div class="form-group">
+            <label>Nombre del Modelo:</label>
+            <input type="text" th:field="*{nombre}" placeholder="Ej: Superstar, Ultra Boost" required />
+        </div>
+
+        <div class="form-group">
+            <label>Género:</label>
+            <select th:field="*{genero}" required>
+                <option value="">-- Elige un GÉNERO --</option>
+                <option value="MUJER">MUJER</option>
+                <option value="HOMBRE">HOMBRE</option>
+                <option value="NIÑO">NIÑO</option>
+                <option value="NIÑA">NIÑA</option>
+                <option value="UNISEX">UNISEX</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Marca / Fabricante:</label>
+            <select th:field="*{marcaId}" required>
+                <option value="">-- Elige un fabricante de la lista --</option>
+                <option th:each="m : ${todasLasMarcas}"
+                        th:value="${m.id}"
+                        th:text="${m.nombre}">Laura Azaña</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Color:</label>
+            <input type="text" th:field="*{color}" placeholder="Ej: Azul, Blanco/Rojo, Negro" required />
+        </div>
+
+        <div class="form-group">
+            <label>Descripción:</label>
+            <textarea th:field="*{descripcion}" placeholder="Detalles del calzado..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Precio Base (€):</label>
+            <input type="number" step="0.01" th:field="*{precioBase}" placeholder="Ej: 89.95" required />
+        </div>
+
+        <div class="form-group">
+            <label>Categoría:</label>
+            <input type="text" th:field="*{categoria}" placeholder="Ej: Casual, Running, Infantil" required />
+        </div>
+
+        <div class="form-group">
+            <label for="repoTexto">Repo de Stock Recibida:</label>
+            <input type="text"
+                   id="repoTexto"
+                   th:field="*{repoTexto}"
+                   placeholder="Ej: 36/1 37/2 38/3 39/2 40/1"
+                   pattern="^\d+\/\d+(\s+\d+\/\d+)*$"
+                   title="Formato requerido: números enteros TALLA/CANTIDAD separados por espacio (Ej: 36/1 37/2)"
+                   required
+                   autocomplete="off"/>
+            <div class="help-text">Usa el formato: <strong>talla/cantidad</strong> separadas por espacios. Solo enteros.</div>
+        </div>
+
+        <div class="form-group">
+            <label>Ubicación Almacén:</label>
+            <input type="text" th:field="*{ubicacionAlmacen}" placeholder="Ej: Estantería Central" required />
+        </div>
+
+        <button type="submit" class="btn">🚀 Guardar y Dar de Alta</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputRepo = document.getElementById("repoTexto");
+
+        if (inputRepo) {
+            inputRepo.addEventListener("blur", function () {
+                let valor = this.value.trim();
+                // Elimina espacios alrededor de las barras (36 / 1 -> 36/1)
+                valor = valor.replace(/\s*\/\s*/g, "/");
+                // Convierte múltiples espacios intermedios en un solo espacio
+                valor = valor.replace(/\s+/g, " ");
+                this.value = valor;
+            });
+        }
+    });
+</script>
+</body>
+</html>

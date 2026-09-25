@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reposiciones de modelos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+        .form-container { max-width: 600px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin: 0 auto; }
+        h2 { color: #333; margin-top: 0; border-bottom: 2px solid #6f42c1; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { background-color: #6f42c1; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; }
+        .btn:hover { background-color: #59359a; }
+        .help-text { font-size: 13px; color: #6c757d; margin-top: 5px; }
+        .alert-error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        select:disabled { background-color: #e9ecef; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>⚡ Reponer producto</h2>
+    <div class="alert-error" th:if="${error}" th:text="${error}"></div>
+
+    <a th:href="@{/index}" style="display: inline-block; background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-bottom: 10px;">
+        Volver a Principal
+    </a>
+
+    <form th:action="@{/stock/guardar-repo}" th:object="${repoRequest}" method="POST">
+
+        <div class="form-group">
+            <label>1. Temporada / Campaña:</label>
+            <select id="comboTemporada" onchange="cambioTemporada()" required>
+                <option value="">-- Selecciona la temporada del albarán --</option>
+                <option th:each="temp : ${todasLasTemporadas}" th:value="${temp}" th:text="${temp}"></option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>2. Marca:</label>
+            <select id="comboMarca" onchange="cambioMarca()" disabled required>
+                <option value="">-- Primero selecciona temporada --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>3. Modelo / Referencia:</label>
+            <select id="comboModelo" onchange="cambioModelo()" disabled required>
+                <option value="">-- Primero selecciona marca --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label style="color:#6f42c1;">4. Selecciona Color:</label>
+            <select id="comboColor" th:field="*{productoId}" disabled required>
+                <option value="">-- Primero selecciona modelo --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="repoTexto">Repo de Stock Recibida:</label>
+            <input type="text"
+                   id="repoTexto"
+                   th:field="*{repoTexto}"
+                   placeholder="Ej: 36/1 37/2 38/3"
+                   pattern="^\d+\/\d+(\s+\d+\/\d+)*$"
+                   title="Formato requerido: números enteros TALLA/CANTIDAD separados por espacio (Ej: 36/1 37/2)"
+                   required
+                   autocomplete="off"/>
+            <div class="help-text">Usa el formato: <strong>talla/cantidad</strong> separadas por espacios (Ej: 38/2 39/1). Solo enteros sin decimales.</div>
+        </div>
+
+        <div class="form-group">
+            <label>Ubicación Almacén:</label>
+            <input type="text" th:field="*{ubicacionAlmacen}" placeholder="Ej: Estantería Central" required />
+        </div>
+
+        <button type="submit" class="btn">🚀 Procesar e Importar Albarán</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputRepo = document.getElementById("repoTexto");
+
+        if (inputRepo) {
+            inputRepo.addEventListener("blur", function () {
+                let valor = this.value.trim();
+                // Elimina espacios alrededor de las barras (36 / 1 -> 36/1)
+                valor = valor.replace(/\s*\/\s*/g, "/");
+                // Convierte múltiples espacios intermedios en un solo espacio
+                valor = valor.replace(/\s+/g, " ");
+                this.value = valor;
+            });
+        }
+
+        // Si la pantalla se recarga por un error del backend y ya había una temporada seleccionada,
+        // re-disparamos el evento para no perder la cadena de combos.
+        const comboTemp = document.getElementById("comboTemporada");
+        if (comboTemp && comboTemp.value) {
+            cambioTemporada();
+        }
+    });
+
+    function cambioTemporada() {
+        const temp = document.getElementById("comboTemporada").value;
+        const comboMarca = document.getElementById("comboMarca");
+
+        limpiarCombo(comboMarca, "-- Selecciona Marca --");
+        limpiarCombo(document.getElementById("comboModelo"), "-- Primero selecciona marca --");
+        limpiarCombo(document.getElementById("comboColor"), "-- Primero selecciona modelo --");
+
+        if (!temp) return;
+
+        fetch(`/api/productos/marcas?temporada=${encodeURIComponent(temp)}`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(marca => {
+                    comboMarca.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
+                });
+                comboMarca.disabled = false;
+            });
+    }
+
+    function cambioMarca() {
+        const temp = document.getElementById("comboTemporada").value;
+        const marcaId = document.getElementById("comboMarca").value;
+        const comboModelo = document.getElementById("comboModelo");
+
+        limpiarCombo(comboModelo, "-- Selecciona Modelo --");
+        limpiarCombo(document.getElementById("comboColor"), "-- Primero selecciona modelo --");
+
+        if (!marcaId) return;
+
+        fetch(`/api/productos/modelos?temporada=${encodeURIComponent(temp)}&marcaId=${marcaId}`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(modelo => {
+                    comboModelo.innerHTML += `<option value="${modelo}">${modelo}</option>`;
+                });
+                comboModelo.disabled = false;
+            });
+    }
+
+    function cambioModelo() {
+        const temp = document.getElementById("comboTemporada").value;
+        const marcaId = document.getElementById("comboMarca").value;
+        const modelo = document.getElementById("comboModelo").value;
+        const comboColor = document.getElementById("comboColor");
+
+        limpiarCombo(comboColor, "-- Selecciona Color --");
+
+        if (!modelo) return;
+
+        fetch(`/api/productos/colores?temporada=${encodeURIComponent(temp)}&marcaId=${marcaId}&modelo=${encodeURIComponent(modelo)}`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(prod => {
+                    comboColor.innerHTML += `<option value="${prod.id}">${prod.color}</option>`;
+                });
+                comboColor.disabled = false;
+            });
+    }
+
+    function limpiarCombo(combo, textoInicial) {
+        combo.innerHTML = `<option value="">${textoInicial}</option>`;
+        combo.disabled = true;
+    }
+</script>
+</body>
+</html>

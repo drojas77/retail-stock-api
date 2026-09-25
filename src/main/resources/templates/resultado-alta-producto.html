@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado alta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f6f9;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #0056b3;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .disponible { background-color: #d4edda; color: #155724; }
+        .vendido { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+
+
+<h1>📦 Cajas de zapatos introducidas</h1>
+<a th:href="@{/index}" style="display: inline-block; background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-bottom: 10px;">
+    Volver a Principal
+</a>
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h2>Inventario de Stock</h2>
+    <a href="/stock/exportar-pdf/ultimo" class="btn btn-success" target="_blank">
+        🖨️ Imprimir Etiquetas Dobles (Último Lote)
+    </a>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Producto / Modelo</th>
+        <th>Marca</th>
+        <th>Talla</th>
+        <th>SKU Fábrica</th>
+        <th>Código QR (DNI Caja)</th>
+        <th>Ubicación</th>
+        <th>Estado</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- El th:each funciona como un bucle for-each de Java -->
+    <tr th:each="caja : ${listaCajas}">
+        <td th:text="${caja.id}">1</td>
+        <!-- Navegamos por las relaciones del objeto hasta llegar al nombre del producto -->
+        <td th:text="${caja.variante.producto.nombre}">Modelo de ejemplo</td>
+        <td th:text="${caja.variante.producto.marca.nombre}">Marca</td>
+        <td th:text="${caja.variante.talla.numero}">42</td>
+        <td th:text="${caja.variante.skuModelo}">SKU-999</td>
+        <td th:text="${caja.qrCodigoUnico}">QR-000</td>
+        <td th:text="${caja.ubicacionAlmacen}">Estantería</td>
+        <td>
+            <!-- Aplicamos una clase CSS dinámica según el estado de la caja -->
+            <span th:text="${caja.estado}"
+                  th:class="${caja.estado == 'DISPONIBLE'} ? 'badge disponible' : 'badge vendido'">
+                        ESTADO
+                    </span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

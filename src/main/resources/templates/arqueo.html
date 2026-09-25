@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Arqueo de Caja - Aemas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f6f9;
+        }
+        h1 { color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-row { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .form-group { display: flex; align-items: center; gap: 8px; }
+        .grid-resumen {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .box { padding: 20px; border-radius: 6px; color: white; text-align: center; }
+        .box-ventas { background-color: #28a745; }
+        .box-devoluciones { background-color: #dc3545; }
+        .box-balance { background-color: #0056b3; }
+        .box h2 { margin: 10px 0 0 0; font-size: 2em; }
+        .btn-volver {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .btn-consultar {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-hoy {
+            background-color: #17a2b8;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        input[type="date"] { padding: 7px; border: 1px solid #ccc; border-radius: 4px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th { background-color: #f8f9fa; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>📊 Arqueo y Cierre de Caja</h1>
+        <a th:href="@{/}" class="btn-volver">← Volver al Inicio</a>
+    </div>
+
+    <!-- Formulario de filtro -->
+    <div class="card">
+        <form th:action="@{/arqueo}" method="get" class="form-row">
+            <div class="form-group">
+                <label for="fechaInicio" style="font-weight: bold;">Desde:</label>
+                <input type="date" id="fechaInicio" name="fechaInicio" th:value="${fechaInicio}">
+            </div>
+
+            <div class="form-group">
+                <label for="fechaFin" style="font-weight: bold;">Hasta:</label>
+                <input type="date" id="fechaFin" name="fechaFin" th:value="${fechaFin}">
+            </div>
+
+            <button type="submit" class="btn-consultar">🔍 Consultar</button>
+            <a th:href="@{/arqueo}" class="btn-hoy">📅 Ver Hoy</a>
+        </form>
+    </div>
+
+    <h3 style="color: #555; margin-bottom: 10px;" th:text="${resumen.periodo}">Día HOY</h3>
+
+    <!-- Indicadores de Totales -->
+    <div class="grid-resumen">
+        <div class="box box-ventas">
+            <h3>Ventas</h3>
+            <p><span th:text="${resumen.totalParesVendidos}">0</span> pares vendidos</p>
+            <h2 th:text="${#numbers.formatDecimal(resumen.totalIngresosVentas, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</h2>
+        </div>
+
+        <div class="box box-devoluciones">
+            <h3>Devoluciones</h3>
+            <p><span th:text="${resumen.totalParesDevueltos}">0</span> pares devueltos</p>
+            <h2 th:text="${#numbers.formatDecimal(resumen.totalImporteDevoluciones, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</h2>
+        </div>
+
+        <div class="box box-balance">
+            <h3>Balance Neto</h3>
+            <p>Ingresos - Devoluciones</p>
+            <h2 th:text="${#numbers.formatDecimal(resumen.balanceNeto, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</h2>
+        </div>
+    </div>
+
+    <!-- TABLA DE PARES VENDIDOS -->
+    <div class="card">
+        <h3 style="color: #28a745; margin-top: 0;">🛒 Detalle de Pares Vendidos</h3>
+        <div th:if="${#lists.isEmpty(resumen.lineasVentas)}">
+            <p style="color: #777;">No hay ventas registradas en el periodo seleccionado.</p>
+        </div>
+        <table th:if="${!#lists.isEmpty(resumen.lineasVentas)}">
+            <thead>
+            <tr>
+                <th>Código QR</th>
+                <th>Producto</th>
+                <th>Talla</th>
+                <th>Precio Cobrado</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="linea : ${resumen.lineasVentas}">
+                <td th:text="${linea.cajaStock.qrCodigoUnico}">QR-000</td>
+                <td th:text="${linea.cajaStock.variante.producto.nombre}">Nombre Producto</td>
+                <td th:text="${linea.cajaStock.variante.talla.numero}">42</td>
+                <td th:text="${#numbers.formatDecimal(linea.precioFinalCobrado, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TABLA DE PARES DEVUELTOS -->
+    <div class="card">
+        <h3 style="color: #dc3545; margin-top: 0;">↩️ Detalle de Pares Devueltos</h3>
+        <div th:if="${#lists.isEmpty(resumen.lineasDevoluciones)}">
+            <p style="color: #777;">No hay devoluciones registradas en el periodo seleccionado.</p>
+        </div>
+        <table th:if="${!#lists.isEmpty(resumen.lineasDevoluciones)}">
+            <thead>
+            <tr>
+                <th>Código QR</th>
+                <th>Producto</th>
+                <th>Talla</th>
+                <th>Importe Devuelto</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="linea : ${resumen.lineasDevoluciones}">
+                <td th:text="${linea.cajaStock.qrCodigoUnico}">QR-000</td>
+                <td th:text="${linea.cajaStock.variante.producto.nombre}">Nombre Producto</td>
+                <td th:text="${linea.cajaStock.variante.talla.numero}">42</td>
+                <td th:text="${#numbers.formatDecimal(linea.precioFinalAbonado, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

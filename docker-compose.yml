@@ -1,0 +1,36 @@
+services:
+  postgres-db:
+    image: postgres:17-alpine
+    container_name: gestionstock-db
+    env_file: .env
+    environment:
+      TZ: Europe/Madrid
+      PGTZ: Europe/Madrid
+    command: postgres -c timezone=Europe/Madrid
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  app:
+    build: .
+    container_name: gestionstock-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+    env_file: .env
+    environment:
+      TZ: Europe/Madrid                         # <--- Sincroniza el SO del contenedor Java
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid" # <--- Sincroniza la JVM
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}?serverTimezone=Europe/Madrid
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SQL_INIT_MODE: always
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+
+
+volumes:
+  postgres_data:

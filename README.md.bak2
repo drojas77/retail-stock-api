@@ -1,0 +1,63 @@
+![Banner](./banner.png)
+# retail-stock-api
+
+[![Java](https://img.shields.io/badge/Java-17-orange?style=flat&logo=openjdk)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat&logo=springboot)](https://spring.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://www.docker.com/)
+[![Status](https://img.shields.io/badge/Estado-En_Desarrollo_Activo_(Funcional)-green?style=flat)]()
+
+> 🟢 **Estado del proyecto:** Aplicación en **desarrollo activo**, totalmente **funcional y operativa** para la gestión diaria de inventario, ventas, devoluciones y cierres de caja en entorno retail real.
+
+---
+
+## 🛠️ Arquitectura del Sistema
+
+**retail-stock-api** es una **aplicación web monolítica híbrida** desarrollada con **Spring Boot 3** que combina el patrón **MVC** tradicional con una **API REST**:
+
+* **Arquitectura General:** Arquitectura por capas (Controladores, Servicios, Repositorios, Modelo).
+* **Renderizado en Servidor (MVC):** Vistas dinámicas basadas en **Thymeleaf** para la navegación web, formularios y panel de administración.
+* **API REST:** Endpoints en formato **JSON** (`/api/...`) consumidos asíncronamente mediante `Fetch API` desde el cliente para operaciones en tiempo real (ej. lectura de códigos QR con cámara web mediante la integración de `html5-qrcode`).
+* **Persistencia de Datos:** **Spring Data JPA / Hibernate** sobre **PostgreSQL 17** gestionando relaciones multidominio (`@ManyToOne`, `@OneToMany`) y transacciones financieras.
+* **Infraestructura:** Despliegue mediante contenedores **Docker / Docker Compose** e integración de **ngrok** para tunelización HTTPS en pruebas remotas con dispositivos móviles.
+
+---
+
+## ✨ Características Principales
+
+* **Control de Stock y Trazabilidad:** Gestión de productos, variantes (tallas/colores) y cajas físicas identificadas individualmente por **código QR único**.
+* **Punto de Venta / Escáner QR:** Módulo asíncrono para registro instantáneo de ventas y devoluciones mediante cámara.
+* **📊 Arqueo y Cierre de Caja (Cuadre Diario):**
+    * Cálculo en tiempo real del balance neto (Ingresos por ventas - Devoluciones abonadas).
+    * Desglose minucioso por rango de fechas (conteo total de pares vendidos y devueltos).
+    * **Trazabilidad unitaria:** Listado detallado de cada par afectado en el arqueo, mostrando código QR, producto, talla e importe abonado/cobrado.
+* **Seguridad y Perfiles:** Control de acceso mediante Spring Security y configuración segura multi-entorno.
+
+---
+
+## 🏗️ Configuración de Perfiles y Seguridad
+
+El proyecto utiliza **Spring Profiles** y variables de entorno para evitar la filtración de credenciales en el repositorio:
+
+- `application.properties` - Configuración base pública.
+- `application-dev.properties` - Entorno de desarrollo local (gitignored).
+- `application-prod.properties` - Entorno de producción (gitignored).
+
+*Nota: Se incluyen plantillas `*-example.properties` y `.env.example` para facilitar la configuración inicial.*
+
+---
+
+## ⚙️ Cómo ejecutarlo en local
+
+```bash
+# 1. Clonar el repositorio
+git clone [https://github.com/drojas77/retail-stock-api.git](https://github.com/drojas77/retail-stock-api.git)
+cd retail-stock-api
+
+# 2. Copiar variables de entorno
+cp .env.example .env
+
+# 3. Compilar y levantar contenedores
+./mvnw clean package -DskipTests
+docker compose down -v
+docker compose up --build
